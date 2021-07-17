@@ -1,0 +1,253 @@
+<html>
+<head>
+<link rel="stylesheet" href="./css/style.css">
+<H1> Fucking, Wiggling and Resonating </H1>
+</head>
+<body>
+
+<audio controls loop src="track.wav">
+</audio>
+<div>Play the audio file ey</div>
+      
+<P> Delay time:
+<input type="range" oninput="changeDelDuration(event) "min="1" max="200" value="200" step="0.001"/>
+<P> Delay feedback:
+<input type="range" oninput="changeDelFb(event) "min="0" max="0.89" value="0.8" step="0.01"/>   
+
+<P> Delay Mix:
+<input type="range" oninput="changeDelMix(event) "min="0" max="1" value="0.8" step="0.01"/> 
+
+<P> Pluck Excite:
+<input type="range" oninput="changeExcitation(event) "min="0" max="0.8" value="0.5" step="0.01"/>
+
+<P> Pluck Stiffness:
+<input type="range" oninput="changePluckStiff(event) "min="0" max="1" value="0.3" step="0.01"/> 
+
+<P> Fmix:
+<input type="range" oninput="changeFmix(event) "min="0" max="1" value="0.8" step="0.01"/> 
+
+<P> LR-Offset:
+<input type="range" oninput="changeLROffset(event) "min="0" max="1" value="0.8" step="0.0001"/> 
+    
+<P> Shift:
+<input type="range" oninput="changeShift(event) "min="-20" max="20" value="2.2" step="0.001"/> 
+    
+<P> Shift_Scalar:
+<input type="range" oninput="changeShiftScaler(event) "min="1.0" max="6.0" value="6.0" step="0.01"/> 
+
+
+<P> Base Resonator freq:
+<input type="range" oninput="changeBase(event) "min="10" max="80" value="48" step="1"/> 
+        
+<!-- <P> freq1:
+<input type="range" oninput="changeF1(event) "min="0" max="1" value="0.8" step="0"/>  -->
+        
+<P> freq2:
+<input type="range" oninput="changeF2(event) "min="2" max="16" value="3" step="1"/> 
+
+<P> freq3:
+<input type="range" oninput="changeF3(event) "min="4" max="16" value="7" step="1"/> 
+            
+<P> freq4:
+<input type="range" oninput="changeF4(event) "min="6" max="16" value="9" step="1"/> 
+
+
+
+<button data-playing="false" role="switch" aria-checked="false">
+    <!-- <span>Play/Pause</span> -->
+</button>
+
+<!-- Load 'faust2wasm' script generated .js file -->
+<script src="mplucker.js"></script>
+
+<script>
+    
+if (typeof (WebAssembly) === "undefined") 
+{
+    alert("WebAssembly is not supported in this browser, the page will not work !")
+}
+
+var isWebKitAudio = (typeof (webkitAudioContext) !== "undefined");
+var audio_context = (isWebKitAudio) ? new webkitAudioContext({ latencyHint: 0.00001 }) : new AudioContext({ latencyHint: 0.00001 });
+
+audio_context.destination.channelInterpretation = "discrete";
+var mplucker_dsp = null; // this was adapted from osc_dsp
+
+const audioElement = document.querySelector('audio'); // audio track id is audiotest above
+const track = audio_context.createMediaElementSource(audioElement); // track set up via audio_ctx.createMediaElement
+ 
+const playButton = document.querySelector('button');
+
+ playButton.addEventListener('click', function() {
+
+     // check if context is in suspended state (autoplay policy)
+     if (audio_context.state === 'suspended') { // changed the context here to one init'd above
+        audio_context.resume();
+     }
+     // play or pause track depending on state
+     if (this.dataset.playing === 'false') {
+         audioElement.play();
+         this.dataset.playing = 'true';
+     } else if (this.dataset.playing === 'true') {
+         audioElement.pause();
+         this.dataset.playing = 'false';
+     }
+
+ }, false);
+
+ audioElement.addEventListener('ended', () => {
+    playButton.dataset.playing = 'false';
+}, false);
+
+function changeDelDuration(event)
+{
+    var val = event.target.value;
+    val = parseFloat(val);
+    console.log(val);
+    mplucker_dsp.setParamValue("/mplucker/duration", val);
+}
+
+// Slider handler to change the 'osc' volume
+function changeDelFb(event)
+{
+    var val = event.target.value;
+    val = parseFloat(val);
+    console.log(val);
+    mplucker_dsp.setParamValue("/mplucker/feedback", val);
+}
+
+function changeDelMix(event)
+{
+    var val = event.target.value;
+    val = parseFloat(val);
+    console.log(val);
+    mplucker_dsp.setParamValue("/mplucker/dmix", val);
+}
+
+function changeExcitation(event)
+{
+    var val = event.target.value;
+    val = parseFloat(val);
+    console.log(val);
+    mplucker_dsp.setParamValue("/mplucker/excitation", val);
+}
+
+// Slider handler to change the 'osc' volume
+function changePluckStiff(event)
+{
+    var val = event.target.value;
+    val = parseFloat(val);
+    console.log(val);
+    mplucker_dsp.setParamValue("/mplucker/stiffness", val);
+}
+
+function changeLROffset(event)
+{
+    var val = event.target.value;
+    val = parseFloat(val);
+    console.log(val);
+    mplucker_dsp.setParamValue("/mplucker/lr_offset", val);
+}
+
+function changeShift(event)
+{
+    var val = event.target.value;
+    val = parseFloat(val);
+    console.log(val);
+    mplucker_dsp.setParamValue("/mplucker/shift", val);
+}
+
+// Slider handler to change the 'osc' volume
+function changeShiftScaler(event)
+{
+    var val = event.target.value;
+    val = parseFloat(val);
+    console.log(val);
+    mplucker_dsp.setParamValue("/mplucker/shift_scalar", val);
+}
+
+function changeFmix(event)
+{
+    var val = event.target.value;
+    val = parseFloat(val);
+    console.log(val);
+    mplucker_dsp.setParamValue("/mplucker/fmix", val);
+}
+
+function changeBase(event)
+{
+    var val = event.target.value;
+    val = parseFloat(val);
+    console.log(val);
+    mplucker_dsp.setParamValue("/mplucker/base", val);
+}
+
+function changeF2(event)
+{
+    var val = event.target.value;
+    val = parseFloat(val);
+    console.log(val);
+    mplucker_dsp.setParamValue("/mplucker/freq2", val);
+}
+
+function changeF3(event)
+{
+    var val = event.target.value;
+    val = parseFloat(val);
+    console.log(val);
+    mplucker_dsp.setParamValue("/mplucker/freq3", val);
+}
+
+function changeF4(event)
+{
+    var val = event.target.value;
+    val = parseFloat(val);
+    console.log(val);
+    mplucker_dsp.setParamValue("/mplucker/freq4", val);
+}
+
+function startmplucker()
+{
+    // Create the Faust generated node
+    var pluginURL = ".";
+    var plugin = new Faustmplucker(audio_context, pluginURL); // why is this called faustosc specifically?
+    plugin.load().then(node => {
+                            mplucker_dsp = node;
+                            //console.log(mplucker_dsp.getJSON());
+                            // Print paths to be used with 'setParamValue'
+                            console.log(mplucker_dsp.getParams());
+                            track.connect(mplucker_dsp);
+                            // Connect it to output as a regular WebAudio node
+                            mplucker_dsp.connect(audio_context.destination);
+                      });
+}
+
+// Load handler
+window.addEventListener('load', startmplucker);
+
+// To activate audio on iOS
+window.addEventListener('touchstart', function() {
+                        if (audio_context.state !== "suspended") return;
+                        // create empty buffer
+                        var buffer = audio_context.createBuffer(1, 1, 22050);
+                        var source = audio_context.createBufferSource();
+                        source.buffer = buffer;
+                        // connect to output (your speakers)
+                        source.connect(audio_context.destination);
+                        // should I be adding the connect track to faust here?
+                        // play the file
+                        source.start();
+                        
+                        audio_context.resume().then(() => console.log("Audio resumed"));
+                        }, false);
+
+// On desktop
+window.addEventListener("mousedown", () => {
+    if (audio_context.state !== "suspended") return;
+    audio_context.resume().then(() => console.log("Audio resumed"))
+});  
+
+</script>
+
+</body>
+</html>
