@@ -1,9 +1,16 @@
 <html>
 <head>
 <link rel="stylesheet" href="./css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/6.1.0-rc.4/browser/pixi.js"> </script>
+<body>
+<div class="plug">
+
 <H1> Fucking, Wiggling and Resonating </H1>
 </head>
-<body>
+
+
+
+    
 
 <audio controls loop src="track.wav">
 </audio>
@@ -56,7 +63,10 @@
 <button data-playing="false" role="switch" aria-checked="false">
     <!-- <span>Play/Pause</span> -->
 </button>
+</div>
 
+</body>
+</html>
 <!-- Load 'faust2wasm' script generated .js file -->
 <script src="mplucker.js"></script>
 
@@ -249,5 +259,228 @@ window.addEventListener("mousedown", () => {
 
 </script>
 
-</body>
-</html>
+
+
+<script id="vert" type="x-shader/x-vertex">
+    precision mediump float;
+    attribute vec2 aVertexPosition;
+    varying vec2 vTextureCoord;
+    varying vec2 aTextureCoord;
+    
+    //attribute vec3 aColor;
+    attribute vec2 aUvs;
+    
+    uniform mat3 translationMatrix;
+    uniform mat3 projectionMatrix;
+    
+    varying vec2 vUvs;
+    varying vec2 dimensions;
+        //varying vec3 vColor;
+    
+    void main() {
+        //vUvs = aUvs;
+        vUvs = aUvs;
+            //vColor = aColor;
+        gl_Position = vec4((projectionMatrix * translationMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
+         //gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
+        vTextureCoord = aTextureCoord;
+        }
+      
+      //gl_Position = vec4(vUvs.xy, 0.0, 1.0);
+    </script>
+    
+    <script id="frag" type="x-shader/x-vertex">
+    
+    precision mediump float;
+        //varying vec3 vColor;
+    varying vec2 vUvs;
+    uniform sampler2D uSampler2;
+    uniform vec2 dimensions;
+
+
+uniform vec2      resolution;
+uniform float     time;
+uniform float     alpha;
+uniform vec2      speed;
+uniform float     shift;
+#define PI 3.14159265359
+#define TWO_PI 6.28318530718
+
+float hexD(vec2 p)
+{
+    p = abs(p);
+    float c = dot(p,normalize(vec2(1.0,1.73)));
+    c = max(c,p.x);
+    return c;
+}
+
+vec2 getV(vec2 uv)
+{
+    vec2 repeat =vec2 (1.0,1.73);
+    vec2 h = repeat*0.5;
+    vec2 a1=mod(uv,repeat)-h; // gridify, but it's offset
+    vec2 b1=mod(uv-h,repeat)-h; // gridify and center
+    vec2 getv = dot(a1,a1)<dot(b1,b1)?a1:b1;//if else function without if/else
+    
+    return getv;
+}
+
+vec4 hex (vec2 uv)
+{
+    vec2 getv = getV(uv);
+    float x = atan(getv.x,getv.y);
+    float y = 0.5-hexD(getv);
+    vec2 id = uv-getv;
+    
+    vec4 co = vec4(x,y,id.x,id.y); // coords and id
+    return co;
+    
+}
+vec3 triD(vec2 uv,float s)
+{
+    vec2 repeat =vec2 (1.0,1.73);
+    vec2 h = repeat*0.5;
+    vec2 a1=mod(uv,repeat)-h; // gridify, but it's offset
+    vec2 b1=mod(uv-h,repeat)-h; // gridify and center
+    vec2 getv = dot(a1,a1)<dot(b1,b1)?a1:b1;//if else function
+    float d = 0.0;
+    // Taken from the book of shaders
+    // Number of sides of your shape
+    int N = 3;
+    // Angle and radius from the current pixel
+    float a = atan(getv.x,getv.y)+PI;
+    float r = TWO_PI/float(N);
+    
+    vec2 id = getv-uv;
+    // Shaping function that modulate the distance
+    d = cos(floor(0.5+a/r)*r-a)*length(getv);
+    vec3 col = vec3(1.0-smoothstep(s,s+0.01,d));//*sin(id.x*id.y+iTime)));
+    
+    return col;
+}
+
+float circle(in vec2 _st, in float _radius){
+    vec2 dist = _st-vec2(0.5);
+	return 1.-smoothstep(_radius-(_radius*0.01),
+                         _radius+(_radius*0.01),
+                         dot(dist,dist)*4.0); }
+        
+    void main() 
+      {
+        vec2 R = dimensions.xy,
+        // U = fragCoord / R.y;                            // [0,1] vertically Normalized pixel coordinates (from 0 to 1)
+           uv = ( 2.*gl_FragCoord.xy - R ) / R.y;          // [-1,1] vertically
+        vec3 color = vec3(0.0);
+        vec2 uv2 = (gl_FragCoord.xy-0.5*dimensions.xy)/dimensions.y;   
+        vec4 hexer = hex(uv2*6.);
+        
+        float d = 0.0;
+        int N = 6; // Number of sides of your shape
+        float a = atan(uv.x,uv.y) + PI *  mod(time*0.2,1.0); // Angle and radius from the current pixel
+        float r = TWO_PI/float(N) ;
+        d = cos(floor(.5+a/r)*r-a)*length(uv); // Shaping function that modulate the distance
+        float e,f,g,h = 0.0;
+        e = cos(floor(.5+a/r)*r-a)*length(uv)*0.2;
+        f = cos(floor(.5+a/r)*r-a)*length(uv)*2.9;
+        g = cos(floor(.5+a/r)*r-a)*length(uv)*0.3;
+        h = cos(floor(.5+a/r)*r-a)*length(uv*5.0)*0.3;
+        color = vec3(1.0-smoothstep(.4,.41,mod(d+(time*0.5),1.0)));
+        color += vec3(1.0-smoothstep(.4,.41,mod(e+(time*0.5),1.0))).x; 
+        color -= vec3(1.0-smoothstep(.4,.41,mod(h+(time*0.25),1.25))).x;
+        //color += vec3(1.0-smoothstep(.4,.41,mod(f+(time*0.25),1.25))).x;
+        //color -= vec3(1.0-smoothstep(.4,.41,mod(g+(time*0.25),1.25)));
+        // color += vec3(1.0-smoothstep(.4,.41,mod(d+(time*0.5),0.5)));
+        // color -= vec3(1.0-smoothstep(.4,.41,mod(e+(time*0.5),0.5)));
+        vec3 e2 = (0.5 + 0.5*cos(time+uv.xyx+vec3(hexer.z*12.0,2,4)) * 0.75);
+        //color.xyz += (e2*0.5);
+        gl_FragColor.xyz = (color * 0.0125) + e2; // Why such aliasing at 1?
+        }  
+      
+    </script>
+
+<script>
+const canvas = document.getElementById("container");
+// work out what the hell a stage is now, and if you can use in conjunction with an app
+const app = new PIXI.Application(
+{
+  //view: canvas,
+  width: window.innerWidth,
+  height: window.innerHeight
+});
+
+document.body.appendChild(app.view); // can I attach to container still ?
+console.clear()
+var log = console.log.bind(console);
+var baseUrl = "https://s3-us-west-2.amazonaws.com/s.cdpn.io/106114/";
+var vert  = document.getElementById("vert").textContent;
+var frag  = document.getElementById("frag").textContent;
+console.clear();
+
+let rectangle = new PIXI.Rectangle(256, 256, window.width, window.height);
+ //(`Rectangle` is an alias for `PIXI.Rectangle`)
+ //let rectangle = new Rectangle(192, 128, 64, 64);
+
+const geometry = new PIXI.Geometry() // how do I get aVertexPosition to reflect window.size changes?
+    .addAttribute('aVertexPosition',
+          [-100, -100, // x, y
+            100, -100, // x, y
+            100, 100,
+            -100, 100], // x, y
+        2) // the size of the attribute
+        // .addAttribute('aColor', // the attribute name
+        //     [1, 0, 0, // r, g, b
+        //     0, 1, 0, // r, g, b
+        //     0, 0, 1], // r, g, b
+        // 3) // the size of the attribute // why no worky?
+
+    .addAttribute('aUvs', // the attribute name
+            [0, 0, // u, v
+            1, 0, // u, v
+            1, 1,
+            0, 1], // u, v
+        2)
+
+    // the size of the attribute
+    .addIndex([0, 1, 2, 0, 2, 3]);
+
+const uniforms = { 
+  uSampler2: PIXI.Texture.from('https://images.unsplash.com/photo-1626183181255-274fbec3cac7?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'),
+    dimensions: {
+      x: window.innerWidth,
+      y: window.innerHeight,
+  },
+};
+
+const shader = PIXI.Shader.from(vert, frag, uniforms);
+const quad = new PIXI.Mesh(geometry, shader);
+
+quad.position.set(window.innerWidth/2, window.innerHeight/2);
+quad.height = (window.innerHeight);
+quad.width = window.innerWidth;
+//quad.scale.set(1);
+
+app.stage.addChild(quad);
+app.ticker.add((delta) => {
+    //quad.rotation += 0.01;
+});
+
+app.renderer.autoResize = true;
+
+app.renderer.resize(window.innerWidth, window.innerHeight);
+
+window.onresize = function()
+{
+   app.renderer.resize(window.innerWidth, window.innerHeight);
+   quad.height = (window.innerHeight);
+   quad.width = window.innerWidth;
+   quad.position.set(window.innerWidth/2,          
+                     window.innerHeight/2);
+  console.log("this even getting called?");
+  
+  // update UVS or something?
+}
+
+// ok need to resize stuff and figure out how to center the picture above. document 1/2 width, 1/2 height
+
+</script>
+
