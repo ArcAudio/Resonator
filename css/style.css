@@ -1,5 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap');
 
+
+canvas{
+  position:absolute;
+  height:100vh; 
+  width: 100vw;
+}
+
 input[type=range] {
     -webkit-appearance: none;
     margin: 10px 0;
@@ -87,10 +94,17 @@ input[type=range] {
     background: #333;
   }
   
-  body {
+  .plug {
     font-family: "Poppins";
     color: rgb(0, 0, 0);
     padding: 30px;
-    background: rgb(222, 222, 222);
+    margin:0px;
+    position: absolute;
+    z-index: 1;
+  }
+
+  body{
+    margin:0px;
+    padding:0px;
   }
   
