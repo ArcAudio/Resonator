@@ -449,6 +449,7 @@ const uniforms = {
       x: window.innerWidth,
       y: window.innerHeight,
   },
+  time: 0,
 };
 
 const shader = PIXI.Shader.from(vert, frag, uniforms);
@@ -479,6 +480,10 @@ window.onresize = function()
   
   // update UVS or something?
 }
+
+app.ticker.add((delta) => {
+    shader.uniforms.time += 0.01 * delta;
+});
 
 // ok need to resize stuff and figure out how to center the picture above. document 1/2 width, 1/2 height
 
