@@ -1,4 +1,7 @@
 # Resonator
+
+Link to live page: https://arcaudio.github.io/Resonator/mplucker
+
 Just doing more tests, if you read this, you're weird, but incredibly dedicated to information, so I commend you.
 
 This is a damn mash of things I'm experimenting with. The pluck part comes from Romain's talk at  Faust Physical Moddelling workshop in 2020. The pixi.js stuff is handling the pipeline to use webGL shaders. The Freq shift in the dsp file is taken from Ollie Larkin's OWL patches, and the delay is I think the saem fractional delay Romain talks about in the Kadenze course. 
